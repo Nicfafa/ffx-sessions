@@ -3,6 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; connect-src 'self'; img-src data:; base-uri 'none'; form-action 'none'">
 <title>FFx Sessions</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
@@ -384,7 +385,7 @@
     events().filter(e=>e.ms>=S&&e.ms<S+24*HOUR).forEach(e=>{
       const x=TLX0+TLW*(e.ms-S)/(24*HOUR), on=!f||f.includes(e.c);
       const u=el('use',{href:'#fld',x:x-10,y:ny+7,width:22,height:19,fill:e.i==='r'?RED:GOLDF,opacity:on?1:.18},tl);
-      u.innerHTML='<title>'+ukHM(e.ms)+' '+e.c+' – '+e.t+'</title>';
+      const ti=el('title',{},u);ti.textContent=ukHM(e.ms)+' '+e.c+' – '+e.t;
     });
     cursorLine=el('line',{y1:TOP-8,y2:TOP+5*ROW+6,stroke:'#f5cf72','stroke-width':3},tl);
     cursorDot=el('circle',{cy:TOP-8,r:6,fill:'#f5cf72'},tl);
@@ -446,7 +447,7 @@
     list.forEach(e=>{
       const done=e.ms<t, isNext=!done&&!nextDone; if(isNext)nextDone=true;
       const stt=done?'released':'in '+dur(e.ms-t);
-      html+='<div class="ev '+(done?'done':'')+(isNext?' next':'')+'">'+folderSvg(e.i)+'<span class="tm">'+ukHM(e.ms)+'</span><span class="cc">'+e.c+'</span><div class="tt">'+esc(e.t)+(e.f||e.p?'<span>'+(e.f?'Forecast '+esc(e.f):'')+(e.f&&e.p?' · ':'')+(e.p?'Previous '+esc(e.p):'')+'</span>':'')+'</div><div class="stt">'+stt+(e.custom?' <button class="x" data-k="'+e.k+'" title="Remove">×</button>':'')+'</div></div>';
+      html+='<div class="ev '+(done?'done':'')+(isNext?' next':'')+'">'+folderSvg(e.i)+'<span class="tm">'+ukHM(e.ms)+'</span><span class="cc">'+esc(e.c)+'</span><div class="tt">'+esc(e.t)+(e.f||e.p?'<span>'+(e.f?'Forecast '+esc(e.f):'')+(e.f&&e.p?' · ':'')+(e.p?'Previous '+esc(e.p):'')+'</span>':'')+'</div><div class="stt">'+stt+(e.custom?' <button class="x" data-k="'+e.k+'" title="Remove">×</button>':'')+'</div></div>';
     });
     if(!list.length) html='<div class="empty">No red or gold folder news for '+selName()+' in this trading day.</div>';
     $('evlist').innerHTML=html;
