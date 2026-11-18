@@ -216,7 +216,8 @@
   let custom=[];
   try{custom=JSON.parse(localStorage.getItem(LSK)||'[]')}catch(e){custom=[]}
   const saveCustom=()=>{try{localStorage.setItem(LSK,JSON.stringify(custom))}catch(e){}};
-  const events=()=>EV0.map(e=>({...e,ms:Date.parse(e.u)})).concat(custom.map((e,k)=>({...e,ms:Date.parse(e.u),custom:true,k}))).sort((a,b)=>a.ms-b.ms);
+  let feed=null;
+  const events=()=>(feed||EV0).map(e=>({...e,ms:Date.parse(e.u)})).concat(custom.map((e,k)=>({...e,ms:Date.parse(e.u),custom:true,k}))).sort((a,b)=>a.ms-b.ms);
 
   const X=lon=>(lon+180)*10, Y=lat=>(90-lat)*10;
   const el=(n,a,p)=>{const e=document.createElementNS(NS,n);for(const k in a)e.setAttribute(k,a[k]);if(p)p.appendChild(e);return e};
@@ -450,7 +451,7 @@
     if(!list.length) html='<div class="empty">No red or gold folder news for '+selName()+' in this trading day.</div>';
     $('evlist').innerHTML=html;
     $('evlist').querySelectorAll('.x').forEach(b=>b.onclick=()=>{custom.splice(+b.dataset.k,1);saveCustom();listKey='';tlKey='';});
-    $('src').textContent='Red = high impact, gold = medium impact. Impact ratings and UTC times for 18 Nov taken from forextradelab.com, with GBP CPI and ECB times cross-checked against Forex Factory. Forex Factory itself cannot be read automatically, so use + Add event to mirror any folder you see there.';
+    $('src').textContent=feed?'Red = high impact, gold = medium impact. News comes from the Forex Factory calendar feed and refreshes automatically every few hours. Times are shown in London time. Use + Add event for anything extra.':'Red = high impact, gold = medium impact. Showing the built-in list for 18 Nov 2026 because the live news file could not be loaded. Use + Add event to add folders by hand.';
     drawBadges(S);
   }
 
@@ -495,6 +496,16 @@
   $('bPlay').onclick=()=>{if(mode==='live'){setMode('replay');S=sydneyOpenBefore(simT);playing=false}else playing=!playing;$('bPlay').textContent=playing?'Pause':'Play'};
   $('speed').onchange=e=>speed=+e.target.value;
   $('scrub').oninput=e=>{if(mode==='live'){S=sydneyOpenBefore(simT)}setMode('replay');playing=false;$('bPlay').textContent='Play';simT=S+(+e.target.value)*60000;render()};
+  // live news: events.json is refreshed automatically by a scheduled job in the GitHub repository
+  async function loadFeed(){
+    try{
+      const r=await fetch('events.json?t='+Date.now(),{cache:'no-store'});
+      if(!r.ok)return;
+      const j=await r.json();
+      if(j&&Array.isArray(j.events)&&j.events.length){feed=j.events;listKey='';tlKey=''}
+    }catch(e){}
+  }
+  loadFeed();setInterval(loadFeed,10*60*1000);
   refreshSelUI();
   requestAnimationFrame(tick);
   // on phones the map and timeline scroll sideways: start centred on London / the current time
